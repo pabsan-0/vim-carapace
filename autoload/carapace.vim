@@ -1,6 +1,6 @@
 let s:carapace_binary = get(g:, 'carapace_binary', 'carapace')
 let s:carapace_binary_available = executable(s:carapace_binary)
-let s:carapace_binary_warned = false
+let s:carapace_binary_warned = 0
 
 if empty($CARAPACE_BRIDGES)
     let $CARAPACE_BRIDGES = get(g:, 'carapace_bridges', 'zsh,fish,bash')
@@ -21,7 +21,7 @@ function! s:CollectCommandLines(linenum, base) abort
 
     let current_line = getline(a:linenum)
     let start = s:FindWordStart(current_line)
-    call insert(lines, current_line[:start - 1] . a:base)
+    call insert(lines, (start == 0 ? '' : current_line[:start - 1]) . a:base)
 
     let prev = a:linenum - 1
     while prev > 0
@@ -113,7 +113,7 @@ function! carapace#CarapaceComplete(findstart, base) abort
     if !s:carapace_binary_available
         if !s:carapace_binary_warned
             echom "[carapace] Missing carapace binary. See README.md"
-            let s:carapace_binary_warned = true
+            let s:carapace_binary_warned = 1
         endif
         return []
     endif
