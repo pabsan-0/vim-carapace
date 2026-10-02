@@ -1,0 +1,161 @@
+*carapace.txt*  Shell completion inside any Vim buffer        *vim-carapace*
+
+Shell completion inside any Vim buffer, powered by carapace.
+
+                                                       *carapace* *carapace-bin*
+Press <C-x><C-u> on a shell command and carapace supplies the completions,
+whether it is a command name, a subcommand, or a flag value.
+
+Requirements:
+- Vim 8.1
+- `carapace` on $PATH
+
+==============================================================================
+CONTENTS                                              *carapace-contents*
+
+  1. Installation..........................|carapace-install|
+  2. Usage.................................|carapace-usage|
+  3. Configuration.........................|carapace-config|
+  4. Overrides.............................|carapace-overrides|
+  5. Override Rules........................|carapace-rules|
+
+==============================================================================
+1. INSTALLATION                                        *carapace-install*
+
+Using vim-plug: >
+
+    Plug 'pabsan-0/vim-carapace'
+<
+
+Also install 'carapace-sh' and have an executable available in PATH.
+
+==============================================================================
+2. USAGE                                                 *carapace-usage*
+
+The plugin sets 'completefunc', allowing completion with <C-x><C-u> in
+insert mode. By rooting text from your buffer to 'carapace', you get shell
+autocompletion in all vim buffers. This includes, but is not limited to:
+
+- Filesystem completion (already in vim)
+- Arguments
+- Keyword arguments
+- Any autocomplete predicate defined by a program
+
+
+The first word of the line is completed as a command name, using Vim's own
+'shellcmd' or 'file' completion. Once the command is fully typed, arguments
+are completed by 'carapace' using your shell: >
+    git che<C-x><C-u>
+    git checkout
+
+    git checkout ma<C-x><C-u>
+    git checkout master
+
+    curl --<C-x><C-u>          # Recalls weird kwargs
+    docker run <C-x><C-u>      # Recalls the name of your image
+<
+
+Lines joined by a trailing "\" are treated a single command. The first word of
+the first line (leader) is tried as a command. If it doesn't yield completion,
+the leader of the next line is tried next. Lines presumed keyword arguments
+(starting with at least one "-") are skipped.
+
+This lets you get completion easily and explicitly for convoluted stuff like:>
+    ./gst-env.py                 \
+        gst-launch-1.0 -vvv      \
+            videotestsrc         \
+                ! videoconvert   \
+                ! xvim<C-x><C-u>
+<
+
+One may use 'g:carapace_leader_fallbacks' to select how many lines are checked
+after the first fails.
+
+
+==============================================================================
+3. CONFIGURATION                                      *carapace-config*
+
+All variables are optional.                        *g:carapace_enabled*
+    g:carapace_enabled          Set to 0 to disable the plugin entirely.
+                                Default 1.
+                                                   *g:carapace_binary*
+    g:carapace_binary           Path or name of the carapace executable.
+                                Default 'carapace'.
+                                                   *g:carapace_bridges*
+    g:carapace_bridges          Value for $CARAPACE_BRIDGES, set only if
+                                that variable is unset.
+                                Default 'zsh,fish,bash'.
+                                            *g:carapace_leader_fallbacks*
+    g:carapace_leader_fallbacks
+                                Maximum number of extra command candidates
+                                tried per completion. Default 2.
+
+                                                   *g:carapace_overrides*
+    g:carapace_overrides        A dict-like with replacing rules for custom
+                                'carapace' behavior, so you can handle your
+                                own edge cases. See 'carapace-overrides'.
+
+==============================================================================
+4. OVERRIDES                                        *carapace-overrides*
+
+Sometimes 'carapace' is not able to provide a completion because of a number
+of reasons:
+- Your program has a broken option
+- You are using a common alias
+- You are deeply nested in a weird multiline command
+- Your program has a different name in the container where your code will run
+
+For those scenarios, you may define 'overrides' that alter the command strings
+received by 'carapace'. 'Overrides' are keyed by the command basename and live
+in 'g:carapace_overrides', which you can define in your .vimrc: >
+
+    let g:carapace_overrides = {
+        \ 'gst-launch-1.0': [['DropWithValue', '--gst-plugin-load']],
+        \ 'batcat':         [['Replace', 'batcat', 'bat']],
+        \ 'fdfind':         [['Replace', 'fdfind', 'fd']],
+        \ }
+<
+
+Rules run left to right over the whole command and its arguments:
+
+- Patterns are Vim very-magic regexes matched against a whole argument token.
+- "\v" and "\C" are applied for you; add "\c" to opt into case-insensitivity.
+- Unknown, malformed, or invalid-regex rules are skipped without aborting
+  completion.
+
+See 'carapace-rules' for details.
+
+==============================================================================
+5. OVERRIDE RULES                                           *carapace-rules*
+
+                                                           *carapace-Drop*
+Drop(pattern)
+    Remove every matching argument.
+    [['Drop', '/dev/null']
+
+                                                    *carapace-DropWithValue*
+DropWithValue(pattern)
+    Remove a matching argument and its value.
+    [['DropWithValue', '--device', '/dev/null']
+
+                                                    *carapace-DropFrom*
+DropFrom(pattern)
+    Remove the first match and everything after it.
+    [['DropFrom', '--into']
+
+                                                    *carapace-Replace*
+Replace(pattern, token)
+    Replace a matching argument.
+    [['Replace', 'foo', 'bar']
+
+                                                    *carapace-InsertAfter*
+InsertAfter(pattern, token)
+    Insert token after the first match.
+    [['InsertAfter', '--opt-arg-next', '--']
+
+                                                    *carapace-KeepFirst*
+KeepFirst(n)
+    Keep only the first n arguments.
+    [['KeepFirst', '2']
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
