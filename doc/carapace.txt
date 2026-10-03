@@ -60,7 +60,7 @@ the first line (leader) is tried as a command. If it doesn't yield completion,
 the leader of the next line is tried next. Lines presumed keyword arguments
 (starting with at least one "-") are skipped.
 
-This lets you get completion easily and explicitly for convoluted stuff like:>
+This lets you get completion easily and explicitly for convoluted stuff like: >
     ./gst-env.py                 \
         gst-launch-1.0 -vvv      \
             videotestsrc         \

@@ -20,7 +20,7 @@ Plug 'pabsan-0/vim-carapace'
 
 ## Usage
 
-While in insert mode, press `<C-x><C-u>` on a shell command and have it autocompleted, whether it's a command name, a subcommand, or a flag value.
+While in insert mode, press `<C-x><C-u>` on a shell command to have it autocompleted, whether it's a command name, a subcommand, or a flag value.
 
 ```vim
 git che<C-x><C-u>
@@ -45,7 +45,7 @@ Lines joined by a trailing `\` are treated a single command.
 
 When nesting commands, the first word of each line will attempt autocompletion in sequence, starting from the highest scope.
 
-See details in the (plugin documentation)[./doc/carapace.txt] for more.
+See details in the [plugin documentation](./doc/carapace.txt) for more.
 
 ## Configuration
 
